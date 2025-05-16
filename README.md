@@ -16,9 +16,4 @@ An interactive web-based quiz application built using **HTML**, **CSS**, and **J
 - **CSS** – for styling and layout
 - **JavaScript** – for logic, interactivity, and dynamic content handling
 
-## 📸 Screenshots
-
-> _Add screenshots of the app UI here (optional but recommended)._
-
-## 📁 Project Structure
 
