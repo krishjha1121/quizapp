@@ -1,204 +1,349 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzer</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f2f0, #e0e5e0);
             color: #333;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
-        .quiz-container {
+        .container {
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
             width: 90%;
             max-width: 600px;
-            padding: 20px;
+            padding: 40px;
             text-align: center;
             box-sizing: border-box;
         }
 
-        .question {
-            font-size: 1.2em;
+        #start-screen h1 {
+            font-size: 2.5em;
+            color: #336699;
             margin-bottom: 20px;
+        }
+
+        #start-screen p {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        #quiz-container {
+            display: none;
+            /* Hidden by default */
+        }
+
+        .timer {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #d9534f;
+        }
+
+        .question {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.4;
         }
 
         .options {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
+            margin-bottom: 30px;
         }
 
         .option {
-            padding: 10px;
-            border: 2px solid #ccc;
-            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
             cursor: pointer;
-            transition: background-color 0.3s, color 0.3s;
+            transition: all 0.3s ease-in-out;
+            font-size: 1.1em;
+            background-color: #f9f9f9;
+            color: #333;
         }
 
-        .option:hover {
-            background-color: #007bff;
+        .option:hover:not(:disabled) {
+            background-color: #e9ecef;
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+        .option:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .option.correct {
+            background-color: #5cb85c;
             color: #fff;
+            border-color: #5cb85c;
         }
 
-        .timer {
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            color: #ff5722;
+        .option.incorrect {
+            background-color: #d9534f;
+            color: #fff;
+            border-color: #d9534f;
         }
 
         .result {
-            font-size: 1.5em;
-            color: #4caf50;
-            display: none;
+            font-size: 2em;
+            color: #336699;
+            font-weight: bold;
+            margin-bottom: 20px;
         }
 
-        .restart-btn {
+        .result span {
+            color: #007bff;
+            font-size: 1.3em;
+        }
+
+        .btn {
             background-color: #007bff;
             color: #fff;
             border: none;
-            padding: 10px 20px;
-            font-size: 1em;
-            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
             cursor: pointer;
             margin-top: 20px;
-            display: none;
+            transition: background-color 0.3s ease;
         }
 
-        .restart-btn:hover {
+        .btn:hover {
             background-color: #0056b3;
+        }
+
+        #next-btn,
+        #restart-btn {
+            display: none;
         }
     </style>
 </head>
 
 <body>
-    <div class="quiz-container">
-        <div class="timer">Time Left: <span id="time">30</span>s</div>
-        <div class="question">Question will appear here</div>
-        <div class="options"></div>
-        <div class="result">Your score: <span id="score">0</span></div>
-        <button class="restart-btn">Restart Quiz</button>
+    <div class="container">
+        <div id="start-screen">
+            <h1>The Ultimate Quiz</h1>
+            <p>Test your knowledge with these 15 fun questions. You'll have 30 seconds for each!</p>
+            <button id="start-btn" class="btn">Start Quiz</button>
+        </div>
+
+        <div id="quiz-container">
+            <div class="timer">Time Left: <span id="time">30</span>s</div>
+            <div class="question">Question will appear here</div>
+            <div class="options"></div>
+            <button id="next-btn" class="btn">Next</button>
+        </div>
+
+        <div id="result-screen" style="display: none;">
+            <div class="result">Your final score: <span id="score">0</span> / 15</div>
+            <button id="restart-btn" class="btn">Restart Quiz</button>
+        </div>
+
     </div>
+
     <script>
-        const quizData = [
-            {
-                question: "What is the capital of France?",
-                options: ["Berlin", "Madrid", "Paris", "Lisbon"],
-                answer: "Paris"
-            },
-            {
-                question: "Which language is used for web development?",
-                options: ["Python", "HTML", "Java", "C++"],
-                answer: "HTML"
-            },
-            {
-                question: "Who wrote 'Hamlet'?",
-                options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"],
-                answer: "William Shakespeare"
-            },
-            {
-                question: "What is the largest planet in our solar system?",
-                options: ["Earth", "Mars", "Jupiter", "Saturn"],
-                answer: "Jupiter"
-            },
-            {
-                question: "Which country is known as the Land of the Rising Sun?",
-                options: ["China", "Japan", "South Korea", "India"],
-                answer: "Japan"
-            }
-        ];
+        const quizData = [{
+            question: "What is the capital of France?",
+            options: ["Berlin", "Madrid", "Paris", "Lisbon"],
+            answer: "Paris"
+        }, {
+            question: "What does HTML stand for?",
+            options: ["Hyper Text Markup Language", "Highly Typed Machine Language", "Home Tool Management Language", "Hyperlink and Text Management Language"],
+            answer: "Hyper Text Markup Language"
+        }, {
+            question: "What is the largest planet in our solar system?",
+            options: ["Earth", "Mars", "Jupiter", "Saturn"],
+            answer: "Jupiter"
+        }, {
+            question: "What is CSS primarily used for?",
+            options: ["To define the structure of a webpage", "To manage databases", "To add interactivity to a webpage", "To style the visual presentation of a webpage"],
+            answer: "To style the visual presentation of a webpage"
+        }, {
+            question: "Which artist painted the Mona Lisa?",
+            options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Claude Monet"],
+            answer: "Leonardo da Vinci"
+        }, {
+            question: "Which language adds interactivity to websites?",
+            options: ["Python", "Java", "JavaScript", "C++"],
+            answer: "JavaScript"
+        }, {
+            question: "What is a 'responsive' website design?",
+            options: ["A design that loads faster", "A design that works well on all devices", "A design with many animations", "A design that improves SEO"],
+            answer: "A design that works well on all devices"
+        }, {
+            question: "Who wrote the play 'Hamlet'?",
+            options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"],
+            answer: "William Shakespeare"
+        }, {
+            question: "What does the acronym 'URL' stand for?",
+            options: ["Universal Resource Locator", "Uniform Retrieval Link", "Unified Resource Linkage", "Ultimate Retrieval Location"],
+            answer: "Universal Resource Locator"
+        }, {
+            question: "What is the chemical symbol for water?",
+            options: ["$O_2$", "$CO_2$", "$H_2O$", "$NaCl$"],
+            answer: "$H_2O$"
+        }, {
+            question: "Which HTTP method is used to request data from a server?",
+            options: ["POST", "PUT", "DELETE", "GET"],
+            answer: "GET"
+        }, {
+            question: "Which country is known as the Land of the Rising Sun?",
+            options: ["China", "Japan", "South Korea", "Thailand"],
+            answer: "Japan"
+        }, {
+            question: "What is the process of finding and fixing errors in code called?",
+            options: ["Compiling", "Deploying", "Debugging", "Designing"],
+            answer: "Debugging"
+        }, {
+            question: "React, Angular, and Vue are all popular ________.",
+            options: ["Programming Languages", "Databases", "JavaScript Frameworks/Libraries", "Text Editors"],
+            answer: "JavaScript Frameworks/Libraries"
+        }, {
+            question: "What does API stand for?",
+            options: ["Applied Programming Interface", "Application Programming Interface", "Automated Protocol Interaction", "Advanced Program Integration"],
+            answer: "Application Programming Interface"
+        }, ];
 
         let currentQuestion = 0;
         let score = 0;
         let timeLeft = 30;
         let timerInterval;
+
+        const startScreen = document.getElementById('start-screen');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultScreen = document.getElementById('result-screen');
+
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
         const timerEl = document.getElementById('time');
         const questionEl = document.querySelector('.question');
         const optionsEl = document.querySelector('.options');
-        const resultEl = document.querySelector('.result');
         const scoreEl = document.getElementById('score');
-        const restartBtn = document.querySelector('.restart-btn');
 
-        // Function to load the question
+        // Event Listeners
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', loadNextQuestion);
+        restartBtn.addEventListener('click', restartQuiz);
+
+        function startQuiz() {
+            startScreen.style.display = 'none';
+            quizContainer.style.display = 'block';
+            loadQuestion();
+        }
+
         function loadQuestion() {
+            resetState();
             if (currentQuestion >= quizData.length) {
                 endQuiz();
                 return;
             }
-            clearInterval(timerInterval);
-            timeLeft = 30;
-            timerEl.textContent = timeLeft;
-            startTimer();
+
             const currentQuiz = quizData[currentQuestion];
             questionEl.textContent = currentQuiz.question;
-            optionsEl.innerHTML = ''; // Clear previous options
+
             currentQuiz.options.forEach(option => {
                 const button = document.createElement('button');
                 button.classList.add('option');
                 button.textContent = option;
-                button.onclick = () => checkAnswer(option);
+                button.addEventListener('click', () => checkAnswer(option, button));
                 optionsEl.appendChild(button);
             });
+
+            startTimer();
         }
 
-        // Check the answer
-        function checkAnswer(selectedOption) {
-            if (selectedOption === quizData[currentQuestion].answer) {
-                score++;
-            }
-            currentQuestion++;
-            loadQuestion();
+        function resetState() {
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            timerEl.textContent = timeLeft;
+            optionsEl.innerHTML = '';
+            nextBtn.style.display = 'none';
         }
 
-        // Start the timer
         function startTimer() {
             timerInterval = setInterval(() => {
                 timeLeft--;
                 timerEl.textContent = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    endQuiz();
+                    handleTimeout();
                 }
             }, 1000);
         }
 
-        // End the quiz and show the results
-        function endQuiz() {
+        function checkAnswer(selectedOption, selectedButton) {
             clearInterval(timerInterval);
-            questionEl.style.display = 'none';
-            optionsEl.style.display = 'none';
-            resultEl.style.display = 'block';
-            scoreEl.textContent = score;
-            restartBtn.style.display = 'block';
+            const correctAnswer = quizData[currentQuestion].answer;
+
+            // Disable all options after an answer is selected
+            Array.from(optionsEl.children).forEach(button => {
+                button.disabled = true;
+                // Highlight the correct answer
+                if (button.textContent === correctAnswer) {
+                    button.classList.add('correct');
+                }
+            });
+
+            if (selectedOption === correctAnswer) {
+                score++;
+                selectedButton.classList.add('correct');
+            } else {
+                selectedButton.classList.add('incorrect');
+            }
+
+            nextBtn.style.display = 'block';
         }
 
-        // Restart the quiz
-        restartBtn.addEventListener('click', () => {
-            // Reset variables
+        function handleTimeout() {
+            const correctAnswer = quizData[currentQuestion].answer;
+            Array.from(optionsEl.children).forEach(button => {
+                button.disabled = true;
+                if (button.textContent === correctAnswer) {
+                    button.classList.add('correct');
+                }
+            });
+            nextBtn.style.display = 'block';
+        }
+
+        function loadNextQuestion() {
+            currentQuestion++;
+            loadQuestion();
+        }
+
+        function endQuiz() {
+            quizContainer.style.display = 'none';
+            resultScreen.style.display = 'block';
+            restartBtn.style.display = 'block';
+            scoreEl.textContent = score;
+        }
+
+        function restartQuiz() {
             currentQuestion = 0;
             score = 0;
-            timeLeft = 30;
-            timerEl.textContent = timeLeft;
-
-            // Reset the display
-            questionEl.style.display = 'block';
-            optionsEl.style.display = 'flex'; // Ensure options are displayed correctly
-            resultEl.style.display = 'none';
-            restartBtn.style.display = 'none';
-
-            // Load the first question
-            loadQuestion();
-        });
-
-        // Initialize the quiz with the first question
-        loadQuestion();
+            resultScreen.style.display = 'none';
+            startScreen.style.display = 'block'; // Go back to start screen
+        }
     </script>
 </body>
 
